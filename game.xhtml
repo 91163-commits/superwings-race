@@ -1,0 +1,951 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="referrer" content="no-referrer"/>
+<title>超级飞侠大赛跑</title>
+<style>/*<![CDATA[*/
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  background:linear-gradient(#5fb8ff 0%,#8fd0ff 40%,#d8f1ff 68%,#a5e58a 68.3%,#7ed957 100%);
+}
+#app{max-width:520px;margin:0 auto;height:100dvh;position:relative;overflow:hidden}
+#app.shake{animation:shake .15s}
+@keyframes shake{25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}75%{transform:translate(-2px,-1px)}}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;padding:14px 16px;z-index:2}
+.screen.active{display:flex}
+
+/* 云朵装饰 */
+.cloud{position:absolute;background:#fff;border-radius:50px;opacity:.9;z-index:1;animation:drift linear infinite}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud.c1{width:90px;height:30px;top:8%;left:-100px;animation-duration:38s}
+.cloud.c1::before{width:40px;height:40px;top:-20px;left:14px}
+.cloud.c1::after{width:28px;height:28px;top:-14px;right:14px}
+.cloud.c2{width:70px;height:24px;top:20%;left:-80px;animation-duration:52s;animation-delay:-20s}
+.cloud.c2::before{width:32px;height:32px;top:-16px;left:12px}
+.cloud.c2::after{width:22px;height:22px;top:-11px;right:12px}
+.cloud.c3{width:110px;height:34px;top:32%;left:-120px;animation-duration:64s;animation-delay:-40s;opacity:.7}
+.cloud.c3::before{width:46px;height:46px;top:-23px;left:18px}
+.cloud.c3::after{width:32px;height:32px;top:-16px;right:18px}
+@keyframes drift{to{transform:translateX(calc(100vw + 240px))}}
+body.racing .cloud.c1{animation-duration:9s}
+body.racing .cloud.c2{animation-duration:12s}
+body.racing .cloud.c3{animation-duration:15s}
+
+/* 通用按钮 */
+.btn{
+  border:none;border-radius:999px;font-weight:800;color:#fff;cursor:pointer;
+  box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .08s;font-family:inherit;
+}
+.btn:active{transform:scale(.94)}
+.btn-big{font-size:22px;padding:16px 20px;width:100%}
+.btn-mid{font-size:17px;padding:12px 18px}
+.btn-orange{background:linear-gradient(#ffb340,#ff8a1e)}
+.btn-green{background:linear-gradient(#5ad66f,#2fb84c)}
+.btn-blue{background:linear-gradient(#5ab0ff,#2f7fe8)}
+.btn-gray{background:linear-gradient(#b8c2cc,#8b98a5)}
+
+/* 头像通用 */
+.avimg{width:100%;height:100%;object-fit:contain;display:block}
+
+/* ========== 首页 ========== */
+#screen-home{align-items:center}
+.title-wrap{position:relative;margin-top:3vh;text-align:center}
+.game-title{
+  font-size:34px;font-weight:900;color:#fff;line-height:1.25;
+  text-shadow:0 3px 0 #2f7fe8,0 6px 12px rgba(0,60,120,.35);
+  animation:bob 2.2s ease-in-out infinite;
+}
+.game-title span{color:#ffe14d;text-shadow:0 3px 0 #e8910f,0 6px 12px rgba(0,60,120,.35)}
+.title-mascot{
+  position:absolute;right:-64px;top:-24px;width:74px;height:74px;border-radius:50%;
+  background:#fff;border:4px solid #ffc21c;overflow:hidden;padding:4px;
+  box-shadow:0 4px 12px rgba(0,60,120,.3);animation:bob 1.8s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.home-sub{margin-top:8px;font-size:15px;font-weight:700;color:#1a5fa8;background:rgba(255,255,255,.85);padding:6px 16px;border-radius:999px}
+.char-grid{margin-top:16px;width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.char-card{
+  background:rgba(255,255,255,.95);border-radius:18px;padding:10px 6px 10px;text-align:center;
+  border:4px solid transparent;box-shadow:0 4px 10px rgba(0,60,120,.15);position:relative;
+  transition:transform .12s,border-color .12s;cursor:pointer;
+}
+.char-card .avatar{
+  width:64px;height:64px;margin:0 auto;border-radius:50%;background:#fff;
+  border:3px solid #eee;overflow:hidden;padding:3px;
+}
+.char-card .cname{font-size:15px;font-weight:800;margin-top:5px}
+.char-card .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:1px}
+.char-card.sel{border-color:#ffc21c;transform:scale(1.08);box-shadow:0 0 0 4px rgba(255,194,28,.35),0 6px 14px rgba(0,60,120,.25)}
+.char-card.sel .avatar{border-color:#ffc21c}
+.char-card.sel::after{
+  content:"✔";position:absolute;top:-10px;right:-8px;width:26px;height:26px;border-radius:50%;
+  background:#ffc21c;color:#fff;font-size:15px;font-weight:900;line-height:26px;box-shadow:0 2px 4px rgba(0,0,0,.25);
+}
+.home-btns{margin-top:18px;width:100%;display:flex;flex-direction:column;gap:12px;padding-bottom:6px}
+.home-tip{font-size:13px;color:#fff;font-weight:700;text-align:center;text-shadow:0 1px 3px rgba(0,80,160,.5)}
+
+/* ========== 比赛 ========== */
+#screen-race{padding:10px 6px}
+.race-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;position:relative;z-index:6}
+.race-head .round{font-size:15px;font-weight:800;color:#fff;background:rgba(0,90,180,.55);padding:5px 14px;border-radius:999px}
+.race-head .hint{font-size:14px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,80,160,.6);animation:blink 1s step-start infinite}
+@keyframes blink{50%{opacity:.35}}
+.lanes{display:flex;flex-direction:column;justify-content:flex-start;gap:10px;position:relative;margin-top:8px}
+.lane{
+  position:relative;height:66px;background:rgba(255,255,255,.55);border-radius:14px;
+  border:2px dashed rgba(255,255,255,.9);overflow:visible;
+}
+.lane::before{
+  content:"";position:absolute;inset:0;border-radius:12px;opacity:0;transition:opacity .4s;
+  background:repeating-linear-gradient(90deg,transparent 0 26px,rgba(255,255,255,.55) 26px 34px);
+}
+.lane.fast::before{opacity:1;animation:laneScroll .45s linear infinite}
+@keyframes laneScroll{to{transform:translateX(-34px)}}
+.lane.me{background:rgba(255,246,200,.85);border-color:#ffc21c;box-shadow:0 0 0 3px rgba(255,194,28,.4)}
+.lane .flag{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:22px;z-index:1}
+.rankBadge{
+  position:absolute;left:8px;top:-12px;z-index:6;font-size:12px;font-weight:800;color:#fff;
+  background:#2f7fe8;padding:2px 10px;border-radius:999px;box-shadow:0 2px 5px rgba(0,0,0,.25);
+  transition:background .2s;
+}
+.lane .racer{
+  position:absolute;top:50%;left:4%;transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;z-index:2;
+  transition:left .1s linear;
+}
+.racer .trail{
+  position:absolute;right:60%;top:50%;width:40px;height:16px;transform:translateY(-50%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.95));border-radius:10px;
+  opacity:0;pointer-events:none;
+}
+.racer.moving .trail{opacity:.9}
+.racer .avatar{
+  width:50px;height:50px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
+  border:3px solid #eee;box-shadow:0 2px 6px rgba(0,0,0,.25);overflow:hidden;padding:2px;position:relative;z-index:2;
+}
+.racer .rtag{
+  position:absolute;top:-15px;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.45);
+  padding:1px 8px;border-radius:999px;white-space:nowrap;z-index:3;
+}
+.racer .medal{position:absolute;top:-18px;right:-14px;font-size:20px;display:none;z-index:4;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.racer.hop .avatar{animation:hop .22s ease}
+@keyframes hop{40%{transform:translateY(-11px) scale(1.14) rotate(-6deg)}}
+.dust{position:absolute;font-size:14px;z-index:3;animation:dustfly .5s ease-out forwards;pointer-events:none}
+@keyframes dustfly{to{transform:translateY(-26px) scale(1.6);opacity:0}}
+.tap-btn-wrap{padding:10px 0 6px;position:relative;z-index:6}
+#tapBtn{
+  font-size:32px;letter-spacing:3px;position:relative;overflow:visible;
+  padding:26px 20px;border-radius:32px;
+  animation:btnPulse .9s ease-in-out infinite;
+}
+@keyframes btnPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.05);box-shadow:0 5px 0 rgba(0,0,0,.18),0 0 26px rgba(90,214,111,.9)}
+}
+#tapBtn:active{transform:scale(.9);animation:none}
+.comboTag{
+  position:absolute;right:6px;top:-52px;z-index:15;pointer-events:none;
+  font-size:32px;font-weight:900;color:#ffe14d;white-space:nowrap;
+  text-shadow:0 3px 0 #e8910f,0 5px 12px rgba(0,0,0,.35);opacity:0;
+}
+.comboTag.pop{animation:comboPop .55s ease-out}
+@keyframes comboPop{0%{transform:scale(.3);opacity:0}30%{transform:scale(1.35);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:translateY(-26px);opacity:0}}
+.ripple{
+  position:fixed;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
+  border:4px solid rgba(255,255,255,.95);box-shadow:0 0 12px rgba(255,255,255,.6);
+  animation:rippleAnim .45s ease-out forwards;pointer-events:none;z-index:60;
+}
+@keyframes rippleAnim{from{transform:scale(.3);opacity:1}to{transform:scale(2.1);opacity:0}}
+#sprint{
+  position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:12;display:none;
+  background:linear-gradient(#ff5f6d,#ff8a1e);color:#fff;font-weight:900;font-size:18px;
+  padding:8px 24px;border-radius:999px;box-shadow:0 4px 16px rgba(255,90,60,.55);white-space:nowrap;
+}
+#sprint.show{display:block;animation:blink .45s step-start infinite}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:40}
+#flash.go{animation:flashAnim .55s ease-out}
+@keyframes flashAnim{0%{opacity:.95}100%{opacity:0}}
+/* 倒计时 */
+#countdown{
+  position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;
+  background:rgba(20,60,110,.35);backdrop-filter:blur(2px);
+}
+#countdown.show{display:flex}
+#countNum{
+  font-size:110px;font-weight:900;color:#ffe14d;
+  text-shadow:0 6px 0 #e8910f,0 12px 24px rgba(0,0,0,.4);
+}
+#countNum.pop{animation:pop .9s ease}
+@keyframes pop{0%{transform:scale(.2);opacity:0}30%{transform:scale(1.25);opacity:1}60%{transform:scale(1)}100%{transform:scale(1.05)}}
+/*]]>*/</style>
+<style>/*<![CDATA[*/
+/* ========== 结算 ========== */
+#screen-result{align-items:center;justify-content:flex-start;overflow-y:auto}
+.result-title{
+  margin-top:.5vh;font-size:24px;font-weight:900;color:#fff;flex-shrink:0;
+  text-shadow:0 3px 0 #2f7fe8,0 6px 12px rgba(0,60,120,.35);
+}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:16px;margin-top:8px;width:100%;flex-shrink:0}
+.pod{display:flex;flex-direction:column;align-items:center;opacity:0;position:relative}
+.pod.show{animation:dropin .55s cubic-bezier(.2,1.6,.4,1) forwards}
+.pod.p1.show{animation-delay:.15s}
+.pod.p2.show{animation-delay:.55s}
+@keyframes dropin{0%{opacity:0;transform:translateY(-70px) scale(.6)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.pod .pavatar-wrap{position:relative;width:72px;height:72px;margin-bottom:-13px;z-index:2}
+.pod .rays{
+  position:absolute;inset:-22px;border-radius:50%;z-index:0;
+  background:repeating-conic-gradient(rgba(255,225,77,.95) 0 10deg,rgba(255,225,77,0) 10deg 22deg);
+  animation:spin 5s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pod .pavatar{
+  width:72px;height:72px;border-radius:50%;background:#fff;position:relative;z-index:2;
+  border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.3);overflow:hidden;padding:4px;
+}
+.pod .crown{position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-size:28px;z-index:3;animation:crownBob 1.4s ease-in-out infinite}
+@keyframes crownBob{50%{transform:translateX(-50%) translateY(-5px) rotate(-8deg)}}
+.pod .pname{font-size:14px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);margin:18px 0 4px}
+.pod .block{
+  width:108px;border-radius:12px 12px 0 0;display:flex;flex-direction:column;align-items:center;
+  padding-top:8px;font-weight:900;color:#fff;box-shadow:inset 0 -6px 0 rgba(0,0,0,.12);
+}
+.pod.p1 .block{height:82px;background:linear-gradient(#ffd94d,#f0a500);font-size:15px}
+.pod.p2 .block{height:58px;background:linear-gradient(#dfe7ee,#9fb2c3);font-size:14px}
+.pod .block .cup{font-size:26px}
+.result-msg{
+  margin-top:12px;font-size:24px;font-weight:900;color:#ffe14d;text-align:center;flex-shrink:0;
+  text-shadow:0 3px 0 #e8910f,0 5px 12px rgba(0,60,120,.4);min-height:36px;opacity:0;
+}
+.result-msg.show{animation:fadeup .5s .9s ease forwards}
+@keyframes fadeup{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+.stats-bar{
+  margin-top:8px;display:flex;gap:10px;flex-shrink:0;opacity:0;
+}
+.stats-bar.show{animation:fadeup .5s 1.05s ease forwards}
+.stat-chip{
+  background:rgba(255,255,255,.9);border-radius:999px;padding:5px 12px;
+  font-size:12px;font-weight:800;color:#1a5fa8;box-shadow:0 2px 6px rgba(0,60,120,.15);
+}
+/* 完整排名榜 */
+.rank-list{width:100%;margin-top:8px;display:flex;flex-direction:column;gap:5px;flex-shrink:1;max-height:26vh;overflow-y:auto}
+.rrow{
+  display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.92);
+  border-radius:14px;padding:3px 10px;box-shadow:0 2px 6px rgba(0,60,120,.12);
+  opacity:0;transform:translateX(-24px);border:2px solid transparent;flex-shrink:0;
+}
+.rrow.show{animation:slideIn .4s ease forwards}
+@keyframes slideIn{to{opacity:1;transform:translateX(0)}}
+.rrow.me{border-color:#ffc21c;background:#fff8dd}
+.rrow .rrank{font-size:17px;width:28px;text-align:center;font-weight:900;color:#5a6b7d;flex-shrink:0}
+.rrow .ravatar{width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid #eee;overflow:hidden;padding:2px;flex-shrink:0}
+.rrow .rname{font-size:14px;font-weight:800;flex:1}
+.rrow .rtime{font-size:12px;font-weight:700;color:#8b98a5}
+.result-btns{margin-top:auto;width:100%;display:flex;flex-direction:column;gap:8px;padding:8px 0 4px;opacity:0;flex-shrink:0}
+.result-btns.show{animation:fadeup .5s 1.2s ease forwards}
+.result-row{display:flex;gap:10px}
+.result-row .btn{flex:1}
+.confetti{position:absolute;top:-12px;width:10px;height:14px;z-index:30;border-radius:2px;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+.balloon{position:absolute;bottom:-70px;font-size:36px;z-index:4;animation:floatUp linear forwards;pointer-events:none}
+@keyframes floatUp{to{transform:translateY(-125vh) rotate(12deg)}}
+
+/* ========== 角色管理 ========== */
+.manage-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.manage-title{font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 4px rgba(0,80,160,.5)}
+.manage-count{font-size:14px;font-weight:800;color:#1a5fa8;background:rgba(255,255,255,.9);padding:4px 12px;border-radius:999px}
+.manage-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px}
+.mrow{
+  display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.95);
+  border-radius:16px;padding:8px 14px;box-shadow:0 3px 8px rgba(0,60,120,.12);
+}
+.mrow.off{opacity:.55}
+.mrow .mavatar{width:46px;height:46px;border-radius:50%;background:#fff;border:3px solid #eee;overflow:hidden;padding:2px;flex-shrink:0}
+.mrow .mname{font-size:17px;font-weight:800;flex:1}
+.mrow .mstate{font-size:12px;font-weight:700;color:#8b98a5}
+.mbtn{border:none;border-radius:999px;font-size:14px;font-weight:800;padding:8px 16px;color:#fff;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.15);font-family:inherit}
+.mbtn:active{transform:scale(.93)}
+.mbtn.add{background:linear-gradient(#5ad66f,#2fb84c)}
+.mbtn.del{background:linear-gradient(#ff8a8a,#e84c4c)}
+.manage-back{padding:10px 0 4px}
+
+/* ========== 战绩总结弹窗 ========== */
+#summaryOverlay{
+  position:absolute;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+  background:rgba(0,40,90,.55);backdrop-filter:blur(2px);
+}
+#summaryOverlay.show{display:flex}
+.sum-card{
+  width:88%;max-height:88%;overflow-y:auto;background:#fff;border-radius:24px;
+  padding:20px 18px 16px;box-shadow:0 12px 40px rgba(0,30,80,.4);
+  display:flex;flex-direction:column;gap:10px;
+  animation:sumIn .35s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes sumIn{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.sum-title{font-size:22px;font-weight:900;text-align:center;color:#1a5fa8}
+.sum-total{
+  text-align:center;font-size:15px;font-weight:800;color:#fff;background:linear-gradient(#5ab0ff,#2f7fe8);
+  border-radius:999px;padding:7px 10px;
+}
+.sum-list{display:flex;flex-direction:column;gap:6px;max-height:32vh;overflow-y:auto}
+.sum-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:#f2f7ff;border-radius:12px;padding:8px 14px;font-size:14px;font-weight:800;color:#33475e;
+}
+.sum-row .sum-rank{font-size:16px}
+.sum-avg{
+  text-align:center;font-size:16px;font-weight:900;color:#e8910f;
+  background:#fff6dd;border-radius:12px;padding:8px;
+}
+.sum-card .btn{flex-shrink:0}
+
+/* ========== 退出画面 ========== */
+#screen-bye{align-items:center;justify-content:center;gap:16px}
+.bye-avatar{
+  width:150px;height:150px;border-radius:50%;background:#fff;border:6px solid #ffc21c;
+  overflow:hidden;padding:10px;box-shadow:0 8px 24px rgba(0,60,120,.35);
+  animation:bob 2s ease-in-out infinite;
+}
+.bye-title{font-size:30px;font-weight:900;color:#fff;text-shadow:0 3px 0 #2f7fe8,0 6px 12px rgba(0,60,120,.35)}
+.bye-sub{font-size:15px;font-weight:700;color:#fff;background:rgba(0,90,180,.45);padding:8px 18px;border-radius:999px}
+
+/* 结算页三按钮行 */
+#exitRow .btn{font-size:14px;padding:11px 4px}
+
+/* 提示条 */
+#toast{
+  position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);
+  background:rgba(0,0,0,.78);color:#fff;font-size:14px;font-weight:700;padding:10px 20px;
+  border-radius:999px;opacity:0;transition:all .25s;z-index:50;white-space:nowrap;pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/*]]>*/</style>
+</head>
+<body>
+<div id="app">
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+
+  <!-- 首页：选角色 -->
+  <section id="screen-home" class="screen active">
+    <div class="title-wrap">
+      <div class="game-title">超级飞侠<br/><span>大赛跑</span> 🏁</div>
+      <div class="title-mascot"><img class="avimg" src="https://i0.hdslb.com/bfs/new_dyn/ca9ae9daaa2f23d3a5764eff0265f252484628087.jpg" alt="乐迪"/></div>
+    </div>
+    <div class="home-sub">👇 选择你的飞侠</div>
+    <div class="char-grid" id="charGrid"></div>
+    <div class="home-btns">
+      <div class="home-tip" id="homeTip"></div>
+      <button class="btn btn-big btn-orange" id="startBtn">开始比赛 🏁</button>
+      <button class="btn btn-mid btn-blue" id="manageBtn">⚙️ 角色管理</button>
+    </div>
+  </section>
+
+  <!-- 比赛 -->
+  <section id="screen-race" class="screen">
+    <div class="race-head">
+      <div class="round" id="roundLabel">第 1 局</div>
+      <div class="hint">快速点击屏幕加速！</div>
+    </div>
+    <div class="lanes" id="lanes"></div>
+    <div class="tap-btn-wrap">
+      <div class="comboTag" id="comboTag"></div>
+      <button class="btn btn-big btn-green" id="tapBtn">👆 点我加速！</button>
+    </div>
+    <div id="sprint">🔥 最后冲刺！ 🔥</div>
+    <div id="countdown"><div id="countNum">3</div></div>
+    <div id="flash"></div>
+  </section>
+
+  <!-- 结算 -->
+  <section id="screen-result" class="screen">
+    <div class="result-title">🎉 比赛结果 🎉</div>
+    <div class="podium">
+      <div class="pod p2" id="pod2">
+        <div class="pavatar-wrap">
+          <div class="pavatar" id="pod2Avatar"></div>
+        </div>
+        <div class="block"><div class="cup">🥈</div>第二名</div>
+        <div class="pname" id="pod2Name"></div>
+      </div>
+      <div class="pod p1" id="pod1">
+        <div class="pavatar-wrap">
+          <div class="rays"></div>
+          <div class="crown">👑</div>
+          <div class="pavatar" id="pod1Avatar"></div>
+        </div>
+        <div class="block"><div class="cup">🥇</div>第一名</div>
+        <div class="pname" id="pod1Name"></div>
+      </div>
+    </div>
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-chip" id="statTaps"></div>
+      <div class="stat-chip" id="statCombo"></div>
+    </div>
+    <div class="rank-list" id="rankList"></div>
+    <div class="result-btns" id="resultBtns">
+      <button class="btn btn-big btn-orange" id="nextBtn">▶ 下一局</button>
+      <div class="result-row" id="exitRow">
+        <button class="btn btn-mid btn-blue" id="changeBtn">🔁 换个角色</button>
+        <button class="btn btn-mid btn-gray" id="manageBtn2">⚙️ 角色管理</button>
+        <button class="btn btn-mid btn-gray" id="exitBtn">🚪 退出</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 战绩总结弹窗 -->
+  <div id="summaryOverlay">
+    <div class="sum-card">
+      <div class="sum-title">📊 本次战绩</div>
+      <div class="sum-total" id="sumTotal"></div>
+      <div class="sum-list" id="sumList"></div>
+      <div class="sum-avg" id="sumAvg"></div>
+      <button class="btn btn-big btn-orange" id="sumNextBtn">▶ 继续下一局</button>
+      <button class="btn btn-mid btn-gray" id="sumCloseBtn">✕ 关闭游戏</button>
+    </div>
+  </div>
+
+  <!-- 退出画面 -->
+  <section id="screen-bye" class="screen">
+    <div class="bye-avatar"><img class="avimg" src="https://i0.hdslb.com/bfs/new_dyn/ca9ae9daaa2f23d3a5764eff0265f252484628087.jpg" alt="乐迪"/></div>
+    <div class="bye-title">拜拜！下次再玩！👋</div>
+    <div class="bye-sub">游戏已结束，可以关闭这个页面啦</div>
+  </section>
+
+  <!-- 角色管理 -->
+  <section id="screen-manage" class="screen">
+    <div class="manage-head">
+      <div class="manage-title">⚙️ 角色管理</div>
+      <div class="manage-count" id="manageCount"></div>
+    </div>
+    <div class="manage-list" id="manageList"></div>
+    <div class="manage-back">
+      <button class="btn btn-big btn-blue" id="backBtn">✔ 完成，返回</button>
+    </div>
+  </section>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+//<![CDATA[
+/* ================= 数据 ================= */
+const ALL_CHARS = [
+  {id:'jett',     name:'乐迪',     color:'#ff4757'},
+  {id:'dizzy',    name:'小爱',     color:'#ff6bcb'},
+  {id:'donnie',   name:'多多',     color:'#f5a623'},
+  {id:'jerome',   name:'酷飞',     color:'#2e9bff'},
+  {id:'paul',     name:'包警长',   color:'#3b4a8c'},
+  {id:'bello',    name:'卡文',     color:'#8d6e4a'},
+  {id:'grand',    name:'胡须爷爷', color:'#e8862e'},
+  {id:'xiaoqing', name:'小青',     color:'#43b84c'},
+];
+const charById = id => ALL_CHARS.find(c => c.id === id);
+const AVATAR_URLS = {
+  jett: 'https://i0.hdslb.com/bfs/new_dyn/ca9ae9daaa2f23d3a5764eff0265f252484628087.jpg',
+  dizzy: 'https://i0.hdslb.com/bfs/new_dyn/64f437606c671c56f12d488a45682530484628087.jpg',
+  donnie: 'https://i0.hdslb.com/bfs/new_dyn/f16ee94f7e6cd18de7c72338f1cdd8a2484628087.jpg',
+  jerome: 'https://i0.hdslb.com/bfs/article/14e91514e0c058ac6fff1788f6c5556c590450162.png',
+  paul: 'https://i0.hdslb.com/bfs/article/9f02a74934b1621f32eeab8f3bcce62d590450162.jpg',
+  bello: 'https://i0.hdslb.com/bfs/article/9c6f04c4ba27fb0af1ff2e2ac6cfeab1590450162.jpg',
+  grand: 'https://i0.hdslb.com/bfs/article/e20ccf402596bf632be8a80c541f526c590450162.png',
+  xiaoqing: 'https://i0.hdslb.com/bfs/article/8449d1cd62b84c5a0feb63b93e45259f590450162.png',
+};
+const avImg = (id, cls='avimg') => `<img class="${cls}" src="${AVATAR_URLS[id]}" alt=""/>`;
+const MIN_CHARS = 4, MAX_CHARS = 8;
+
+const state = {
+  roster: ['jett','dizzy','donnie','jerome','paul','bello'], // 默认6个
+  player: 'jett',
+  round: 1,
+  history: [],   // 每轮战绩 {round, rank, time}
+};
+let race = null;
+
+/* ================= 工具 ================= */
+const $ = id => document.getElementById(id);
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+let toastTimer = null;
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+/* 音效 */
+let AC = null;
+function beep(freq, dur = 0.08, type = 'square', vol = 0.05, delay = 0){
+  try{
+    if(!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime + delay;
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.stop(t + dur);
+  }catch(e){}
+}
+function fanfare(){
+  [523, 659, 784, 1046].forEach((f, i) => beep(f, 0.18, 'triangle', 0.07, i * 0.14));
+}
+
+/* 震动 + 抖屏 */
+let lastShake = 0;
+function feedbackShake(){
+  const now = Date.now();
+  if(now - lastShake < 280) return;
+  lastShake = now;
+  if(navigator.vibrate) navigator.vibrate(12);
+  const app = document.getElementById('app');
+  app.classList.remove('shake');
+  void app.offsetWidth;
+  app.classList.add('shake');
+}
+
+/* 点击波纹 */
+function spawnRipple(x, y){
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left = x + 'px';
+  r.style.top = y + 'px';
+  document.body.appendChild(r);
+  setTimeout(() => r.remove(), 500);
+}
+
+/* ================= 首页 ================= */
+function renderHome(){
+  const grid = $('charGrid');
+  grid.innerHTML = '';
+  state.roster.forEach(id => {
+    const c = charById(id);
+    const card = document.createElement('div');
+    card.className = 'char-card' + (id === state.player ? ' sel' : '');
+    card.innerHTML = `<div class="avatar" style="border-color:${c.color}">${avImg(id)}</div>
+      <div class="cname"><span class="dot" style="background:${c.color}"></span>${c.name}</div>`;
+    card.addEventListener('pointerdown', () => {
+      state.player = id;
+      beep(700, 0.06, 'triangle', 0.05);
+      renderHome();
+    });
+    grid.appendChild(card);
+  });
+  $('homeTip').textContent = `每局随机 ${state.roster.length >= 5 ? '5-6' : state.roster.length} 位选手参赛`;
+}
+
+/* ================= 比赛 ================= */
+function pickParticipants(){
+  let n;
+  if(state.roster.length <= 5) n = state.roster.length;
+  else n = Math.random() < 0.5 ? 5 : 6;
+  const others = shuffle(state.roster.filter(id => id !== state.player)).slice(0, n - 1);
+  return shuffle([state.player, ...others]);
+}
+
+function startRace(){
+  const ids = pickParticipants();
+  $('roundLabel').textContent = `第 ${state.round} 局`;
+  $('sprint').classList.remove('show');
+  const lanes = $('lanes');
+  lanes.innerHTML = '';
+  race = {
+    running: false, over: false, finishOrder: [],
+    taps: 0, combo: 0, bestCombo: 0, lastTap: 0, sprinted: false,
+    startTime: 0, forceTimer: null, aiTimer: null,
+    racers: ids.map(id => ({
+      id, pos: 0, finished: false, finishTime: 0,
+      isPlayer: id === state.player,
+      speed: 0.75 + Math.random() * 0.45,
+      el: null, medalEl: null, laneEl: null, lastHop: 0,
+    })),
+  };
+  race.racers.forEach(r => {
+    const c = charById(r.id);
+    const lane = document.createElement('div');
+    lane.className = 'lane' + (r.isPlayer ? ' me' : '');
+    lane.innerHTML = `<div class="flag">🏁</div>
+      ${r.isPlayer ? '<div class="rankBadge">第-名</div>' : ''}
+      <div class="racer">
+        <div class="trail"></div>
+        <div class="rtag">${c.name}${r.isPlayer ? ' ⭐' : ''}</div>
+        <div class="avatar" style="border-color:${c.color}">${avImg(r.id)}</div>
+        <div class="medal"></div>
+      </div>`;
+    lanes.appendChild(lane);
+    r.el = lane.querySelector('.racer');
+    r.medalEl = lane.querySelector('.medal');
+    r.laneEl = lane;
+    if(r.isPlayer) r.badgeEl = lane.querySelector('.rankBadge');
+  });
+  show('screen-race');
+  runCountdown();
+}
+
+function runCountdown(){
+  const cd = $('countdown'), num = $('countNum');
+  cd.classList.add('show');
+  const steps = ['3','2','1','GO!'];
+  let i = 0;
+  function next(){
+    if(i < steps.length){
+      num.textContent = steps[i];
+      num.classList.remove('pop');
+      void num.offsetWidth;
+      num.classList.add('pop');
+      beep(i < 3 ? 500 : 900, i < 3 ? 0.1 : 0.25, 'square', 0.06);
+      i++;
+      setTimeout(next, i < steps.length ? 800 : 600);
+    }else{
+      cd.classList.remove('show');
+      race.running = true;
+      race.startTime = performance.now();
+      document.body.classList.add('racing');
+      document.querySelectorAll('.lane').forEach(l => l.classList.add('fast'));
+      race.racers.forEach(r => { if(!r.isPlayer) r.el.classList.add('moving'); });
+      race.aiTimer = setInterval(aiTick, 90);
+    }
+  }
+  next();
+}
+
+function aiTick(){
+  if(!race || !race.running) return;
+  const player = race.racers.find(r => r.isPlayer);
+  race.racers.forEach(r => {
+    if(r.isPlayer || r.finished) return;
+    let v = r.speed * (0.6 + Math.random() * 0.8);
+    const gap = r.pos - player.pos;
+    if(gap > 18) v *= 0.8;
+    else if(gap < -18) v *= 1.18;
+    r.pos = Math.min(100, r.pos + v);
+    moveRacer(r);
+    if(r.pos >= 100 && !r.finished) finishRacer(r);
+  });
+  updatePlayerRank();
+  checkSprint();
+  // 兜底：15秒后强制结束
+  if(!race.forceTimer){
+    race.forceTimer = setTimeout(() => {
+      race.racers.filter(r => !r.finished)
+        .sort((a, b) => b.pos - a.pos)
+        .forEach(r => finishRacer(r));
+    }, 15000);
+  }
+}
+
+function moveRacer(r){
+  r.el.style.left = (4 + r.pos * 0.86) + '%';
+}
+
+function updatePlayerRank(){
+  const player = race.racers.find(r => r.isPlayer);
+  const rank = 1 + race.racers.filter(r => !r.isPlayer && r.pos > player.pos).length;
+  player.badgeEl.textContent = `第${rank}名`;
+  player.badgeEl.style.background = rank === 1 ? '#2fb84c' : (rank <= 3 ? '#ff8a1e' : '#2f7fe8');
+}
+
+function checkSprint(){
+  if(race.sprinted) return;
+  const leader = Math.max(...race.racers.map(r => r.pos));
+  if(leader >= 75){
+    race.sprinted = true;
+    $('sprint').classList.add('show');
+    beep(700, 0.1, 'square', 0.06);
+    beep(900, 0.1, 'square', 0.06, 0.12);
+  }
+}
+
+function showCombo(n){
+  const tag = $('comboTag');
+  tag.textContent = `x${n} 连击！`;
+  tag.classList.remove('pop');
+  void tag.offsetWidth;
+  tag.classList.add('pop');
+}
+
+function tapBoost(x, y){
+  if(!race || !race.running || race.over) return;
+  const player = race.racers.find(r => r.isPlayer);
+  if(player.finished) return;
+  const now = Date.now();
+  if(now - race.lastTap < 60) return;
+  // 连击
+  if(now - race.lastTap > 900) race.combo = 0;
+  race.combo++;
+  race.bestCombo = Math.max(race.bestCombo, race.combo);
+  race.taps++;
+  race.lastTap = now;
+
+  let v = 2.1 + Math.random() * 1.3;
+  const leader = Math.max(...race.racers.map(r => r.pos));
+  if(leader - player.pos > 14) v *= 1.25;      // 落后加成
+  if(race.combo >= 10) v *= 1.3;                // 连击加成
+  player.pos = Math.min(100, player.pos + v);
+  moveRacer(player);
+
+  // 反馈：音效音调随连击升高
+  beep(Math.min(280 + race.combo * 30, 800), 0.05, 'triangle', 0.045);
+  feedbackShake();
+  if(x !== undefined) spawnRipple(x, y);
+  if(race.combo >= 3) showCombo(race.combo);
+
+  // 跳跃动画 + 尾迹 + 喷气
+  if(now - player.lastHop > 180){
+    player.lastHop = now;
+    player.el.classList.remove('hop');
+    void player.el.offsetWidth;
+    player.el.classList.add('hop');
+    player.el.classList.add('moving');
+    setTimeout(() => player.el && player.el.classList.remove('moving'), 350);
+    const d = document.createElement('div');
+    d.className = 'dust';
+    d.textContent = '💨';
+    d.style.left = player.el.style.left;
+    d.style.top = '60%';
+    player.laneEl.appendChild(d);
+    setTimeout(() => d.remove(), 500);
+  }
+  updatePlayerRank();
+  checkSprint();
+  if(player.pos >= 100 && !player.finished) finishRacer(player);
+}
+
+function finishRacer(r){
+  r.finished = true;
+  r.finishTime = (performance.now() - race.startTime) / 1000;
+  race.finishOrder.push(r.id);
+  const rank = race.finishOrder.length;
+  const medals = ['🥇','🥈','🥉'];
+  r.medalEl.textContent = medals[rank - 1] || rank;
+  r.medalEl.style.display = 'block';
+  if(rank === 1){
+    beep(1200, 0.2, 'triangle', 0.08);
+    const f = $('flash');
+    f.classList.remove('go');
+    void f.offsetWidth;
+    f.classList.add('go');
+  }
+  if(race.racers.every(x => x.finished)){
+    race.running = false;
+    race.over = true;
+    clearInterval(race.aiTimer);
+    clearTimeout(race.forceTimer);
+    document.body.classList.remove('racing');
+    setTimeout(showResult, 1300);
+  }
+}
+
+/* 点击屏幕任意处加速 */
+$('lanes').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  tapBoost(e.clientX, e.clientY);
+});
+$('tapBtn').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const rect = e.currentTarget.getBoundingClientRect();
+  tapBoost(rect.left + rect.width / 2, rect.top);
+});
+
+/* ================= 结算 ================= */
+function showResult(){
+  const order = race.finishOrder;
+  const first = charById(order[0]), second = charById(order[1]);
+  const playerRank = order.indexOf(state.player) + 1;
+
+  // 记录本轮战绩
+  const playerRacer = race.racers.find(r => r.isPlayer);
+  state.history.push({round: state.round, rank: playerRank, time: playerRacer.finishTime});
+
+  $('pod1Avatar').innerHTML = avImg(first.id);
+  $('pod1Avatar').style.borderColor = first.color;
+  $('pod1Name').textContent = first.name;
+  $('pod2Avatar').innerHTML = avImg(second.id);
+  $('pod2Avatar').style.borderColor = second.color;
+  $('pod2Name').textContent = second.name;
+
+  const msgs = {
+    1: `🏆 你是第一名！${first.name}太棒啦！`,
+    2: `🎉 你是第二名！只差一点点！`,
+  };
+  $('resultMsg').textContent = msgs[playerRank] || `你是第 ${playerRank} 名，继续加油哦！💪`;
+  $('statTaps').textContent = `👆 点击 ${race.taps} 次`;
+  $('statCombo').textContent = `🔥 最高连击 ${race.bestCombo}`;
+
+  // 完整排名榜
+  const list = $('rankList');
+  list.innerHTML = '';
+  const medals = ['🥇','🥈','🥉'];
+  order.forEach((cid, i) => {
+    const c = charById(cid);
+    const r = race.racers.find(x => x.id === cid);
+    const row = document.createElement('div');
+    row.className = 'rrow' + (cid === state.player ? ' me' : '');
+    row.innerHTML = `
+      <div class="rrank">${medals[i] || (i + 1)}</div>
+      <div class="ravatar" style="border-color:${c.color}">${avImg(cid)}</div>
+      <div class="rname">${c.name}${cid === state.player ? ' ⭐' : ''}</div>
+      <div class="rtime">${r.finishTime.toFixed(2)} 秒</div>`;
+    list.appendChild(row);
+    setTimeout(() => row.classList.add('show'), 600 + i * 130);
+  });
+
+  // 重置并播放入场动画
+  ['pod1','pod2'].forEach(id => $(id).classList.remove('show'));
+  ['resultMsg','resultBtns','statsBar'].forEach(id => $(id).classList.remove('show'));
+  show('screen-result');
+  requestAnimationFrame(() => {
+    ['pod1','pod2'].forEach(id => $(id).classList.add('show'));
+    ['resultMsg','resultBtns','statsBar'].forEach(id => $(id).classList.add('show'));
+  });
+
+  fanfare();
+  launchConfetti();
+  launchBalloons();
+}
+
+function launchConfetti(){
+  const colors = ['#ff4757','#ffc21c','#2e9bff','#5ad66f','#ff6bcb','#9b59ff'];
+  const screen = $('screen-result');
+  for(let i = 0; i < 70; i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (1.6 + Math.random() * 1.6) + 's';
+    c.style.animationDelay = (Math.random() * 1) + 's';
+    if(Math.random() < 0.5) c.style.borderRadius = '50%';
+    screen.appendChild(c);
+    setTimeout(() => c.remove(), 4200);
+  }
+}
+
+function launchBalloons(){
+  const icons = ['🎈','🎈','🎉','⭐','🎈','⭐'];
+  const screen = $('screen-result');
+  icons.forEach((ic, i) => {
+    const b = document.createElement('div');
+    b.className = 'balloon';
+    b.textContent = ic;
+    b.style.left = (8 + Math.random() * 84) + '%';
+    b.style.animationDuration = (3 + Math.random() * 2) + 's';
+    b.style.animationDelay = (i * 0.4) + 's';
+    screen.appendChild(b);
+    setTimeout(() => b.remove(), 6000);
+  });
+}
+
+$('nextBtn').addEventListener('click', () => {
+  state.round++;
+  beep(800, 0.08, 'triangle', 0.05);
+  startRace();
+});
+$('changeBtn').addEventListener('click', () => { renderHome(); show('screen-home'); });
+$('manageBtn2').addEventListener('click', () => { renderManage(); show('screen-manage'); });
+
+/* ================= 退出 & 战绩总结 ================= */
+function openSummary(){
+  const h = state.history;
+  if(!h.length){ toast('还没有比赛记录哦！'); return; }
+  $('sumTotal').textContent = `本次比赛共 ${h.length} 轮`;
+  const list = $('sumList');
+  list.innerHTML = '';
+  const medals = ['🥇','🥈','🥉'];
+  h.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'sum-row';
+    const rankText = medals[it.rank - 1] ? medals[it.rank - 1] + ' 第' + it.rank + '名' : '第 ' + it.rank + ' 名';
+    row.innerHTML = `<span>第 ${it.round} 轮</span>
+      <span class="sum-rank">${rankText}</span>
+      <span>${it.time.toFixed(2)} 秒</span>`;
+    list.appendChild(row);
+  });
+  const avg = h.reduce((s, it) => s + it.time, 0) / h.length;
+  $('sumAvg').textContent = `⏱ 平均时长 ${avg.toFixed(2)} 秒`;
+  $('summaryOverlay').classList.add('show');
+  beep(660, 0.1, 'triangle', 0.05);
+}
+$('exitBtn').addEventListener('click', openSummary);
+$('sumNextBtn').addEventListener('click', () => {
+  $('summaryOverlay').classList.remove('show');
+  state.round++;
+  beep(800, 0.08, 'triangle', 0.05);
+  startRace();
+});
+$('sumCloseBtn').addEventListener('click', () => {
+  $('summaryOverlay').classList.remove('show');
+  fanfare();
+  show('screen-bye');
+  try{ window.close(); }catch(e){}
+});
+
+/* ================= 角色管理 ================= */
+function renderManage(){
+  $('manageCount').textContent = `已选 ${state.roster.length} 个（${MIN_CHARS}-${MAX_CHARS}）`;
+  const list = $('manageList');
+  list.innerHTML = '';
+  ALL_CHARS.forEach(c => {
+    const inRoster = state.roster.includes(c.id);
+    const row = document.createElement('div');
+    row.className = 'mrow' + (inRoster ? '' : ' off');
+    row.innerHTML = `
+      <div class="mavatar" style="border-color:${c.color}">${avImg(c.id)}</div>
+      <div class="mname">${c.name}${c.id === state.player ? ' ⭐' : ''}</div>
+      <div class="mstate">${inRoster ? '已加入' : '未加入'}</div>`;
+    const btn = document.createElement('button');
+    btn.className = 'mbtn ' + (inRoster ? 'del' : 'add');
+    btn.textContent = inRoster ? '移除' : '加入';
+    btn.addEventListener('click', () => {
+      if(inRoster){
+        if(state.roster.length <= MIN_CHARS){
+          toast(`最少需要 ${MIN_CHARS} 个角色哦！`);
+          return;
+        }
+        state.roster = state.roster.filter(id => id !== c.id);
+        if(state.player === c.id) state.player = state.roster[0];
+        beep(400, 0.08, 'triangle', 0.05);
+      }else{
+        if(state.roster.length >= MAX_CHARS){
+          toast(`最多只能有 ${MAX_CHARS} 个角色哦！`);
+          return;
+        }
+        state.roster.push(c.id);
+        beep(800, 0.08, 'triangle', 0.05);
+      }
+      renderManage();
+    });
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
+}
+$('manageBtn').addEventListener('click', () => { renderManage(); show('screen-manage'); });
+$('backBtn').addEventListener('click', () => { renderHome(); show('screen-home'); });
+
+/* ================= 开始 ================= */
+$('startBtn').addEventListener('click', () => {
+  beep(880, 0.1, 'triangle', 0.06);
+  startRace();
+});
+renderHome();
+//]]>
+</script>
+</body>
+</html>
